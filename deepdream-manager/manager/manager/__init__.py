@@ -51,7 +51,7 @@ def upload():
         u'</form>'
     )
 
-def list_output_images(output_folder):
+def list_images(output_folder):
     return sorted([
         f for f in os.listdir(output_folder) 
         if os.path.splitext(f)[-1].lower() in images_extensions
@@ -70,14 +70,34 @@ def generate_images_dict(images):
     return result
 
 
+@app.route("/api/stats")
+def stats():
+    input_list = sorted(list_images(input_folder))
+    output_list = sorted(list_images(output_folder))
+
+    result = []
+
+    for f in input_list:
+        result.append(
+            (f, f in output_list, url_for('view', path=f))
+        )
+
+    html = "<ul>"
+    for f, finished, link in result:
+        html += """<li><a href="%s">%s - %s</a>""" % (link, f, finished)
+    html += "</ul>"
+    return html
+            
+
 @app.route("/api/view/<path>")
 def view(path):
     return """
         <img src="/inputs/%s"><img src="/outputs/%s">
     """ % (path, path)
 
+
 @app.route("/api/outputs")
 def outputs():
-    images = list_output_images(output_folder)
+    images = list_images(output_folder)
     result = generate_images_dict(images)
     return json.dumps(result, indent=4)

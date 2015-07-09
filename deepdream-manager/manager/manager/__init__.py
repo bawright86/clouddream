@@ -2,10 +2,14 @@ import json
 import os
 import time
 
-from flask import Flask, jsonify
-
+from flask import Flask, jsonify, request, redirect, url_for
+from flask.ext.uploads import (
+    UploadSet, configure_uploads, IMAGES,
+    UploadNotAllowed
+)
 
 output_folder = "/opt/deepdream/outputs" 
+input_folder = "/opt/deepdream/inputs" 
 path_prefix = "/outputs"
 
 output_file = "images.json"
@@ -19,16 +23,39 @@ images_extensions = [
 app = Flask(__name__)
 app.debug = True
 
+app.config['UPLOADED_PHOTOS_DEST'] = input_folder
+uploaded_photos = UploadSet('photos', IMAGES)
+configure_uploads(app, uploaded_photos)
+
+
 @app.route("/api/ping")
 def home():
     return "pong"
 
 
+@app.route('/api/upload', methods=['GET', 'POST'])
+def upload():
+    """Upload a new file."""
+    if request.method == 'POST':
+        photo = request.files.get('photo')
+        try:
+            filename = uploaded_photos.save(photo)
+        except UploadNotAllowed:
+            return "nope"
+
+        return redirect(url_for('home'))
+    return (
+        u'<form method="POST" enctype="multipart/form-data">'
+        u'  <input name="photo" type="file">'
+        u'  <button type="submit">Upload</button>'
+        u'</form>'
+    )
+
 def list_output_images(output_folder):
-    return [
+    return sorted([
         f for f in os.listdir(output_folder) 
         if os.path.splitext(f)[-1].lower() in images_extensions
-    ]
+    ])
 
 
 def generate_images_dict(images):
@@ -37,10 +64,17 @@ def generate_images_dict(images):
         result.append({
             "id": index,
             "name": f,
+            "details": url_for('view', path=f),
             "src": "{}/{}".format(path_prefix, f),
         })
     return result
 
+
+@app.route("/api/view/<path>")
+def view(path):
+    return """
+        <img src="/inputs/%s"><img src="/outputs/%s">
+    """ % (path, path)
 
 @app.route("/api/outputs")
 def outputs():

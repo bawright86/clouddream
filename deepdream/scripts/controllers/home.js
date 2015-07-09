@@ -21,12 +21,9 @@ angular.module('akoenig.deckgrid.demo').controller('HomeController', [
 
         'use strict';
 
-      var url = '/images.json';
-      //var url = 'http://deepdream.vision.ai/images.json';
-
+	var url = '/api/outputs';
 
       var searchObject = $location.search();
-      //console.log('searchObj is',searchObject);
       var N = searchObject.N || 20;
       N = Math.max(Math.min(N,100),1);
       

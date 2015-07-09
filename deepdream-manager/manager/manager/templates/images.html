@@ -1,0 +1,24 @@
+{% from "macros.html" import show_image_to_compare, show_image %}
+
+<h2>Current</h2>
+
+{{ show_image("input.jpg", "") }}
+
+<h2>Done</h2>
+{% for filename, done, link in images %}
+  {% if done %}
+  <div>
+    {{ show_image_to_compare(filename, "inputs") }}
+    {{ show_image_to_compare(filename, "outputs") }}
+  </div>
+  {% endif %}
+{% endfor %}
+
+<h2>Waiting</h2>
+{% for filename, done, link in images %}
+  {% if not done %}
+  <div>
+    {{ show_image_to_compare(filename, "inputs") }}
+  </div>
+  {% endif %}
+{% endfor %}

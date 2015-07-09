@@ -1,0 +1,12 @@
+{% macro show_image_to_compare(filename, prefix) %}
+   <a href="{{ url_for('view', path=filename) }}">
+     <img style="height: 200px" src="{% if prefix %}/{{ prefix }}{% endif %}/{{ filename }}">
+   </a>
+{% endmacro %}
+
+{% macro show_image(filename, prefix) %}
+   <a href="/{{ prefix }}/{{ filename }}">
+     <img style="height: 600px" src="{% if prefix %}/{{ prefix }}{% endif %}/{{ filename }}">
+   </a>
+{% endmacro %}
+

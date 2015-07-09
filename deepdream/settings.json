@@ -1,4 +1,6 @@
 {
-    "maxwidth" : 400,
-    "layer" : "inception_4c/output"
+    "maxwidth" : 1000,
+    "iter_n": 30,
+    "octave_n": 6,
+    "end" : "inception_4c/output"
 }

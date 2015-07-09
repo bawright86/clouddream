@@ -16,8 +16,7 @@ def showarray(a, fmt='jpeg'):
     display(Image(data=f.getvalue()))
 
 with open("settings.json") as json_file:
-    json_data = json.load(json_file)
-    #print()
+    config = json.load(json_file)
 
 
 model_path = '../caffe/models/bvlc_googlenet/' # substitute your path here
@@ -97,7 +96,7 @@ def deepdream(net, base_img, iter_n=10, octave_n=4, octave_scale=1.4, end='incep
     return deprocess(net, src.data[0])
 
 
-maxwidth = json_data['maxwidth']
+maxwidth = config.pop("maxwidth", 400)
 img = PIL.Image.open('input.jpg')
 width = img.size[0]
 
@@ -109,18 +108,5 @@ if width > maxwidth:
 img = np.float32(img)
 
 frame = img
-#frame_i = 0
-
-frame = deepdream(net, frame, end=json_data['layer'])
-#frame = deepdream(net, img, end='inception_3b/5x5_reduce')
-#frame = deepdream(net, img, end='conv2/3x3')
-
+frame = deepdream(net, frame, **config)
 PIL.Image.fromarray(np.uint8(frame)).save("output.jpg")
-
-#h, w = frame.shape[:2]
-#s = 0.05 # scale coefficient
-#for i in xrange(100):
-#    frame = deepdream(net, frame)
-#    PIL.Image.fromarray(np.uint8(frame)).save("output/%04d.jpg"%frame_i)
-#    frame = nd.affine_transform(frame, [1-s,1-s,1], [h*s/2,w*s/2,0], order=1)
-#    frame_i += 1

@@ -1,0 +1,12 @@
+{% from "macros.html" import show_image_to_compare, show_image %}
+
+<h2>Done</h2>
+{% for image in source_images %}
+  <div>
+    {{ show_image_to_compare(image) }}
+    {% for job in image.jobs %}
+      {{ show_image_to_compare(job.result_image) }}
+    {% endfor %}
+  </div>
+{% endfor %}
+

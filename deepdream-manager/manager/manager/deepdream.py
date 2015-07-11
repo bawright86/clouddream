@@ -7,7 +7,15 @@ import json
 from IPython.display import clear_output, Image, display
 from google.protobuf import text_format
 
+import datetime
+import json
+import os
+import uuid
+
 import caffe
+
+from app import db, Job, get_or_create_image
+
 
 def showarray(a, fmt='jpeg'):
     a = np.uint8(np.clip(a, 0, 255))
@@ -15,28 +23,27 @@ def showarray(a, fmt='jpeg'):
     PIL.Image.fromarray(a).save(f, fmt)
     display(Image(data=f.getvalue()))
 
-with open("settings.json") as json_file:
-    config = json.load(json_file)
 
+def init():
+    model_path = '/opt/caffe/models/bvlc_googlenet/' # substitute your path here
+    net_fn   = model_path + 'deploy.prototxt'
+    param_fn = model_path + 'bvlc_googlenet.caffemodel'
 
-model_path = '../caffe/models/bvlc_googlenet/' # substitute your path here
-net_fn   = model_path + 'deploy.prototxt'
-param_fn = model_path + 'bvlc_googlenet.caffemodel'
+    # Patching model to be able to compute gradients.
+    # Note that you can also manually add "force_backward: true" line to "deploy.prototxt".
+    model = caffe.io.caffe_pb2.NetParameter()
+    text_format.Merge(open(net_fn).read(), model)
+    model.force_backward = True
+    open('tmp.prototxt', 'w').write(str(model))
 
-# Patching model to be able to compute gradients.
-# Note that you can also manually add "force_backward: true" line to "deploy.prototxt".
-model = caffe.io.caffe_pb2.NetParameter()
-text_format.Merge(open(net_fn).read(), model)
-model.force_backward = True
-open('tmp.prototxt', 'w').write(str(model))
+    net = caffe.Classifier('tmp.prototxt', param_fn,
+                           mean = np.float32([104.0, 116.0, 122.0]), # ImageNet mean, training set dependent
+                           channel_swap = (2,1,0)) # the reference model has channels in BGR order instead of RGB
+    return net
 
-net = caffe.Classifier('tmp.prototxt', param_fn,
-                       mean = np.float32([104.0, 116.0, 122.0]), # ImageNet mean, training set dependent
-                       channel_swap = (2,1,0)) # the reference model has channels in BGR order instead of RGB
-
-# a couple of utility functions for converting to and from Caffe's input image layout
 def preprocess(net, img):
     return np.float32(np.rollaxis(img, 2)[::-1]) - net.transformer.mean['data']
+
 def deprocess(net, img):
     return np.dstack((img + net.transformer.mean['data'])[::-1])
 
@@ -96,17 +103,48 @@ def deepdream(net, base_img, iter_n=10, octave_n=4, octave_scale=1.4, end='incep
     return deprocess(net, src.data[0])
 
 
-maxwidth = config.pop("maxwidth", 400)
-img = PIL.Image.open('input.jpg')
-width = img.size[0]
+def process_image(input_path, output_folder, maxwidth=400, **config):
+    net = init()
+    img = PIL.Image.open(input_path)
+    width = img.size[0]
 
-if width > maxwidth:
-    wpercent = (maxwidth/float(img.size[0]))
-    hsize = int((float(img.size[1])*float(wpercent)))
-    img = img.resize((maxwidth,hsize), PIL.Image.ANTIALIAS)
+    if width > maxwidth:
+        wpercent = (maxwidth/float(img.size[0]))
+        hsize = int((float(img.size[1])*float(wpercent)))
+        img = img.resize((maxwidth,hsize), PIL.Image.ANTIALIAS)
 
-img = np.float32(img)
+    img = np.float32(img)
 
-frame = img
-frame = deepdream(net, frame, **config)
-PIL.Image.fromarray(np.uint8(frame)).save("output.jpg")
+    frame = img
+    frame = deepdream(net, frame, **config)
+    output_filename = str(uuid.uuid4()) + ".jpg"
+    output_path = os.path.join(output_folder, output_filename) 
+    PIL.Image.fromarray(np.uint8(frame)).save(output_path)
+    return output_filename
+
+
+def process_job(job_id):
+    job = Job.query.get(job_id)
+    if not job or job.status in ("COMPLETED", "FAILED"):
+        return
+    
+    try:
+        job.status = "PROCESSING"
+        job.stated = datetime.datetime.utcnow()
+        db.session.commit()
+
+        output_folder = "/opt/deepdream/outputs"
+
+        parameters_dict = json.loads(job.parameters)
+        output_filename = process_image(job.source_image.fullpath, output_folder, **parameters_dict)
+        image = get_or_create_image(output_filename, output_folder)
+        job.result_image_id = image.id
+        job.status = "COMPLETED"
+        job.finished = datetime.datetime.utcnow()
+        db.session.commit()
+    except Exception as e:
+        job.status = "FAILED"
+        job.log = str(e)
+        db.session.commit()
+        raise
+

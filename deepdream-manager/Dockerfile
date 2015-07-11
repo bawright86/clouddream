@@ -1,4 +1,4 @@
-FROM ubuntu
+FROM deepdream-compute
 
 RUN echo "deb http://archive.ubuntu.com/ubuntu/ $(lsb_release -sc) main universe" >> /etc/apt/sources.list
 

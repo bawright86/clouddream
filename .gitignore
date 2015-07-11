@@ -9,3 +9,6 @@ images.json
 *.mp4
 *.pyc
 *~
+*.db
+*.aof
+

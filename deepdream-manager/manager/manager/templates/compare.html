@@ -1,7 +1,8 @@
 {% from "macros.html" import show_image %}
 
 <div>
-  {{ show_image(image, "inputs") }}
-  {{ show_image(image, "outputs") }}
-  {{ show_image(image, "outputs/old") }}
+  {{ show_image(image) }}
+  {% for job in image.jobs %}
+    {{ show_image(job.result_image) }}
+  {% endfor %}
 </div>

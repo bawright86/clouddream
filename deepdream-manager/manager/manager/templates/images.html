@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "macros.html" import show_image_to_compare, show_image %}
+{% from "macros.html" import show_image_to_compare, show_image, job_image_with_link %}
 
 <div class="container">
 
@@ -8,9 +8,11 @@
 {% block body %}
 {% for image in source_images %}
   <div>
-    {{ show_image_to_compare(image) }}
+    {{ show_image_to_compare(image, image) }}
     {% for job in image.jobs %}
-      {{ show_image_to_compare(job.result_image) }}
+    {% if job.result_image_id %}
+    {{ job_image_with_link(job) }}
+    {% endif %}
     {% endfor %}
   </div>
 {% endfor %}

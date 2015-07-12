@@ -12,6 +12,7 @@ from flask.ext.uploads import (
 from redis import Redis
 from rq import Queue
 import requests
+from sqlalchemy import or_
 
 
 from models import (
@@ -129,31 +130,30 @@ def download_file(url, local_filename):
                 f.flush()
 
 
-@app.route('/api/upload', methods=['GET', 'POST'])
+@app.route('/api/upload', methods=['POST'])
 def upload():
     """Upload a new file."""
-    if request.method == 'POST':
 
-        filename = str(uuid.uuid4()) + ".jpg"
+    filename = str(uuid.uuid4()) + ".jpg"
 
-        url = request.form.get("url", None)
-        if url:
-            path = os.path.join(input_folder, filename)
-            download_file(url, path)
-            image = get_or_create_image(filename, input_folder)
-            return redirect(url_for('view', image_id=image.id))
-
-
-        photo = request.files.get('photo', None)
-        if photo:
-            try:
-                filename = uploaded_photos.save(photo, name=filename)
-            except UploadNotAllowed:
-                return abort(403)
+    url = request.form.get("url", None)
+    if url:
+        path = os.path.join(input_folder, filename)
+        download_file(url, path)
         image = get_or_create_image(filename, input_folder)
-        return redirect(url_for('view', image=image.id))
+        return redirect(url_for('view', image_id=image.id))
 
-    return render_template("upload.html")
+
+    photo = request.files.get('photo', None)
+    if photo:
+        try:
+            filename = uploaded_photos.save(photo, name=filename)
+        except UploadNotAllowed:
+            return abort(403)
+        image = get_or_create_image(filename, input_folder)
+        return redirect(url_for('view', image_id=image.id))
+
+    return abort(400)
 
 
 def list_images(outoput_folder):
@@ -171,10 +171,37 @@ def images():
 
 @app.route("/api/job")
 def jobs():
-    jobs = Job.query.order_by(Job.id)
-    return render_template("jobs.html", jobs=jobs)
+    pending_jobs = Job.query.order_by(Job.id).filter(
+        or_(Job.status == 'PENDING',
+            Job.status == 'PROCESSING')
+    )
+
+    last_completed_jobs = Job.query.filter(
+        or_(Job.status == 'COMPLETED',
+            Job.status == 'FAILED')
+    ).order_by(Job.id.desc()).limit(15)
+
+    return render_template(
+        "jobs.html", 
+        pending_jobs=pending_jobs,
+        last_completed_jobs=last_completed_jobs,
+    )
 
 @app.route("/api/image/<image_id>")
 def view(image_id):
     image = Image.query.get(image_id)
     return render_template("image.html", image=image)
+
+
+@app.template_filter('duration')
+def _jinja2_filter_duration(delta):
+
+    hours, rem = divmod(delta.seconds, 3600)
+    minutes, seconds = divmod(rem, 60)
+    result = ["%02d" % x for x in [hours, minutes, seconds]]
+    return ":".join(result)
+
+@app.template_filter('time')
+def _jinja2_filter_datetime(dt):
+    return dt.replace(microsecond=0)
+

@@ -1,3 +1,4 @@
+import datetime
 import os
 
 from flask.ext.sqlalchemy import SQLAlchemy
@@ -38,6 +39,19 @@ class Job(db.Model):
     result_image = db.relationship(
         'Image', foreign_keys=[result_image_id]
     )
+
+    @property
+    def duration(self):
+        if not self.started:
+            return None
+
+        if self.finished:
+            finished = self.finished
+        else:
+            finished = datetime.datetime.utcnow()
+            
+        return finished - self.started
+        
 
     def __repr__(self):
         return "<Job id=%s source_image_id=%s, result_image_id=%s>" % (

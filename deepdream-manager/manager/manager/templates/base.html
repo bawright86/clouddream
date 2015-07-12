@@ -17,10 +17,54 @@
           <ul class="nav navbar-nav">
             <li><a href="/api/image">Images</a></li>
             <li><a href="/api/job">Jobs</a></li>
-          </ul>
+	  </ul>
+          <button type="button" class="btn btn-default" data-toggle="modal" data-target="#uploadModal">
+	    Upload
+	  </button>
         </div>
       </div>
     </nav>
+
+
+  <!-- Modal -->
+  <div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="uploadModalLabel">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+	<form class="form-horizontal" method="post" action="{{ url_for('upload') }}" enctype="multipart/form-data">
+	  <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	      <span aria-hidden="true">&times;</span>
+	    </button>
+            <h4 class="modal-title" id="uploadModalLabel">Upload</h4>
+	  </div>
+	  <div class="modal-body">
+	    <fieldset>
+	      <div class="form-group">
+		<label for="parameters" class="col-sm-2 control-label">By URL</label>
+		<div class="col-sm-10">
+		  <input type="text"  class="form-control" name="url" placeholder="http://" />
+		</div>
+	      </div>
+
+	      <div class="form-group">
+		<label for="parameters" class="col-sm-2 control-label">File upload</label>
+		<div class="col-sm-10">
+		  <input name="photo" type="file" />
+		</div>
+	      </div>
+	    </fieldset>
+	  </div>
+	  <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	    <button type="submit" class="btn btn-primary">Upload</button>
+	  </div>
+	</form>
+      </div>
+    </div>
+  </div>
+
+
+
     {% block body %}
     {% endblock %}
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>

@@ -2,8 +2,7 @@
 
 {% from "macros.html" import image_link, job_link %}
 
-{% block body %}
-<div class="container">
+{% macro jobs_table(jobs) %}
   <table class="table table-stripped">
     <thead>
       <tr>
@@ -11,21 +10,28 @@
 	<th>Image</th>
 	<th>Status</th>
 	<th>Started</th>
+	<th>Duration</th>
       </tr>
     </thead>
     <tbody>
       {% for job in jobs %}
-      {% if job.status != "COMPLETED" %}
       <tr>
 	<td>{{ job_link(job, job.id) }}</td>
 	<td>{{ image_link(job.source_image, job.source_image.id) }}</td>
 	<td>{{ job.status }}</td>
-	<td>{% if job.started %}{{ job.started }}{% else %}-{% endif %}</td>
+	<td>{% if job.started %}{{ job.started|time }}{% else %}-{% endif %}</td>
+	<td>{% if job.duration %}{{ job.duration|duration }}{% else %}-{% endif %}</td>
       </tr>
-      {% endif %}
       {% endfor %}
     </tbody>
   </table>
+{% endmacro %}
+
+{% block body %}
+
+<div class="container">
+  {{ jobs_table(pending_jobs) }}
+  {{ jobs_table(last_completed_jobs) }}
 </div>
 
 {% endblock %}

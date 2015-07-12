@@ -1,24 +1,17 @@
+{% extends "base.html" %}
 {% from "macros.html" import show_image_to_compare, show_image %}
 
-<h2>Current</h2>
-
-{{ show_image("input.jpg", "") }}
-
+<div class="container">
+{% block body %}
 <h2>Done</h2>
-{% for filename, done, link in images %}
-  {% if done %}
+{% for image in source_images %}
   <div>
-    {{ show_image_to_compare(filename, "inputs") }}
-    {{ show_image_to_compare(filename, "outputs") }}
+    {{ show_image_to_compare(image) }}
+    {% for job in image.jobs %}
+      {{ show_image_to_compare(job.result_image) }}
+    {% endfor %}
   </div>
-  {% endif %}
 {% endfor %}
+</div>
+{% endblock %}
 
-<h2>Waiting</h2>
-{% for filename, done, link in images %}
-  {% if not done %}
-  <div>
-    {{ show_image_to_compare(filename, "inputs") }}
-  </div>
-  {% endif %}
-{% endfor %}

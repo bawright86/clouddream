@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% from "macros.html" import show_image %}
+
+{% macro show_job(job) %}
+<div id="job-{{ job.id }}" class="panel panel-{% if job.status == 'COMPLETED' %}success{% elif job.status == 'FAILED' %}danger{% else %}info{% endif %}">
+  <div class="panel-heading">
+    <h3 class="panel-title">Job #{{ job.id }}</h3>
+  </div>
+  <div class="panel-body">
+    <h2></h2>
+    {% if job.result_image %}
+    <center>{{ show_image(job.result_image) }}</center>
+    {% endif %}
+    <table class="table table-stripped">
+      <tr>
+	<td>Status</td>
+	<td>{{ job.status }}</td>
+      </tr>
+
+      {% if job.started %}
+      <tr>
+	<td>Started</td>
+	<td>{{ job.started }}</td>
+      </tr>
+      {% endif %}
+
+      {% if job.finished %}
+      <tr>
+	<td>Finished</td>
+	<td>{{ job.finished }}</td>
+      </tr>
+      {% endif %}
+
+      {% if job.started and job.finished %}
+      <tr>
+	<td>Duration</td>
+	<td>{{ job.finished - job.started }}</td>
+      </tr>
+      {% endif %}
+
+      <tr>
+	<td>Parameters</td>
+	<td>{{ job.parameters }}</td>
+      </tr>
+    </table>
+  </div>
+</div>
+{% endmacro %}
+
+
+{% block title %}{{ image.id }}{% endblock %}
+
+{% block body %}
+
+<div class="container">
+  <div class="jumbotron">
+    <center>{{ show_image(image) }}</center>
+    <p>
+      <button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#newJobModal">New Job</button>
+    </p>  
+  </div>
+  
+  <!-- Modal -->
+  <div class="modal fade" id="newJobModal" tabindex="-1" role="dialog" aria-labelledby="newJobModalLabel">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+	<form class="form-horizontal" method="post" action="{{ url_for('new_job', image_id=image.id) }}">
+	  <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	      <span aria-hidden="true">&times;</span>
+	    </button>
+            <h4 class="modal-title" id="newJobModalLabel">New job</h4>
+	  </div>
+	  <div class="modal-body">
+	    <fieldset>
+	      <div class="form-group">
+		<label for="parameters" class="col-sm-2 control-label">Parameters</label>
+		<div class="col-sm-10">
+		  <textarea class="form-control" rows="15" cols="50" name="parameters">
+		    {
+		    "maxwidth" : 800,
+		    "iter_n": 10,
+		    "octave_n": 4,
+		    "end" : "inception_4c/output"
+		    }
+		  </textarea>
+		  <span class="help-block">Parameters for the deepdream function.</span>
+		</div>
+	      </div>
+	    </fieldset>
+
+	  </div>
+	  <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+	    <button type="submit" class="btn btn-primary">Create</button>
+	  </div>
+	</form>
+      </div>
+    </div>
+  </div>
+
+  {% for job in image.jobs %}
+  {{ show_job(job) }}
+  {% endfor %}
+</div>
+{% endblock %}

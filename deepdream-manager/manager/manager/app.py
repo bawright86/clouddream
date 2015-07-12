@@ -116,11 +116,6 @@ def scan():
                 db.session.commit()
 
     return str(db.session.query(Image).all())
-    
-
-@app.route("/api/ping")
-def home():
-    return "pong"
 
 
 def download_file(url, local_filename):
@@ -168,13 +163,18 @@ def list_images(outoput_folder):
     ])
 
 
-@app.route("/api/stats")
-def stats():
+@app.route("/api/image")
+def images():
     source_images = Image.query.join((Job, Job.source_image_id==Image.id)).all()
-    return render_template("home.html", source_images=source_images)
+    return render_template("images.html", source_images=source_images)
             
 
-@app.route("/api/view/<image_id>")
+@app.route("/api/job")
+def jobs():
+    jobs = Job.query.order_by(Job.id)
+    return render_template("jobs.html", jobs=jobs)
+
+@app.route("/api/image/<image_id>")
 def view(image_id):
     image = Image.query.get(image_id)
-    return render_template("compare.html", image=image)
+    return render_template("image.html", image=image)

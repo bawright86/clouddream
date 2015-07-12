@@ -165,8 +165,12 @@ def list_images(outoput_folder):
 
 @app.route("/api/image")
 def images():
-    source_images = Image.query.join((Job, Job.source_image_id==Image.id)).all()
-    return render_template("images.html", source_images=source_images)
+    all_images = Image.query
+    result_images = Image.query.join((Job, Job.result_image_id==Image.id))
+    return render_template(
+        "images.html", 
+        source_images=all_images.except_(result_images).order_by(Image.id.desc())
+    )
             
 
 @app.route("/api/job")

@@ -1,5 +1,6 @@
 deepdream/inputs/*
 deepdream/outputs/*
+deepdream/.htpasswd
 tmp.prototxt
 *.mp4
 *.pyc

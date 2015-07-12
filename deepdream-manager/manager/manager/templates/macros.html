@@ -1,0 +1,25 @@
+{%- macro image_url(image) -%}
+{% if image.folder %}/{{ image.folder.replace("/opt/deepdream/", "") }}{% endif %}/{{ image.filename }}
+{%- endmacro -%}
+
+{% macro image_link(image, content) %}
+<a href="{{ url_for('view', image_id=image.id) }}">{{ content }}</a>
+{% endmacro %}
+
+{% macro job_link(job, content) %}
+<a href="{{ url_for('view', image_id=job.source_image_id) }}#job-{{ job.id }}">{{ content }}</a>
+{% endmacro %}
+
+
+{% macro show_image_to_compare(image) %}
+   <a href="{{ url_for('view', image_id=image.id) }}">
+     <img style="height: 200px" src="{{ image_url(image) }}" alt="{{ image.id }}">
+   </a>
+{% endmacro %}
+
+{% macro show_image(image) %}
+   <a href="{{ image_url(image) }}">
+     <img style="height: 600px" src="{{ image_url(image) }}" alt="{{ image.id }}">
+   </a>
+{% endmacro %}
+

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% from "macros.html" import image_link, job_link %}
+
+{% block body %}
+<div class="container">
+  <table class="table table-stripped">
+    <thead>
+      <tr>
+	<th>Job ID</th>
+	<th>Image</th>
+	<th>Status</th>
+	<th>Started</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for job in jobs %}
+      {% if job.status != "COMPLETED" %}
+      <tr>
+	<td>{{ job_link(job, job.id) }}</td>
+	<td>{{ image_link(job.source_image, job.source_image.id) }}</td>
+	<td>{{ job.status }}</td>
+	<td>{% if job.started %}{{ job.started }}{% else %}-{% endif %}</td>
+      </tr>
+      {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

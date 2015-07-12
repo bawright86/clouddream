@@ -1,9 +1,10 @@
-tmp
-inputs
-outputs
+deepdream/inputs/*
+deepdream/outputs/*
+deepdream/.htpasswd
 tmp.prototxt
-log.html
-input.jpg
-output.jpg
-images.json
 *.mp4
+*.pyc
+*~
+*.db
+*.aof
+

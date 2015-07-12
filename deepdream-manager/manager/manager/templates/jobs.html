@@ -2,36 +2,47 @@
 
 {% from "macros.html" import image_link, job_link %}
 
-{% macro jobs_table(jobs) %}
-  <table class="table table-stripped">
-    <thead>
-      <tr>
-	<th>Job ID</th>
-	<th>Image</th>
-	<th>Status</th>
-	<th>Started</th>
-	<th>Duration</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for job in jobs %}
-      <tr>
-	<td>{{ job_link(job, job.id) }}</td>
-	<td>{{ image_link(job.source_image, job.source_image.id) }}</td>
-	<td>{{ job.status }}</td>
-	<td>{% if job.started %}{{ job.started|time }}{% else %}-{% endif %}</td>
-	<td>{% if job.duration %}{{ job.duration|duration }}{% else %}-{% endif %}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+{% macro jobs_table(jobs, title, class="primary") %}
+
+<div class="panel {{ class }}">
+  <div class="panel-heading">
+    <h3 class="panel-title">{{ title }}</h3>
+  </div>
+  <div class="panel-body">
+
+    <table class="table table-stripped">
+      <thead>
+	<tr>
+	  <th>Job ID</th>
+	  <th>Image</th>
+	  <th>Status</th>
+	  <th>Started</th>
+	  <th>Duration</th>
+	</tr>
+      </thead>
+      <tbody>
+	{% for job in jobs %}
+	<tr class="{% if job.status == 'PROCESSING' %}info{% elif job.status == 'FAILED' %}danger{% endif %}">
+	  <td>{{ job_link(job, job.id) }}</td>
+	  <td>{{ image_link(job.source_image, job.source_image.id) }}</td>
+	  <td>{{ job.status }}</td>
+	  <td>{% if job.started %}{{ job.started|time }}{% else %}-{% endif %}</td>
+	  <td>{% if job.duration %}{{ job.duration|duration }}{% else %}-{% endif %}</td>
+	</tr>
+	{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 {% endmacro %}
+
+{% block title %}Jobs{% endblock %}
 
 {% block body %}
 
 <div class="container">
-  {{ jobs_table(pending_jobs) }}
-  {{ jobs_table(last_completed_jobs) }}
+  {{ jobs_table(pending_jobs, "Queue", "panel-info") }}
+  {{ jobs_table(last_completed_jobs, "Recently completed") }}
 </div>
 
 {% endblock %}

@@ -2,8 +2,10 @@
 {% from "macros.html" import show_image_to_compare, show_image %}
 
 <div class="container">
+
+{% block title %}Images{% endblock %}
+
 {% block body %}
-<h2>Done</h2>
 {% for image in source_images %}
   <div>
     {{ show_image_to_compare(image) }}

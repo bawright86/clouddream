@@ -3,18 +3,9 @@ from cStringIO import StringIO
 import numpy as np
 import scipy.ndimage as nd
 import PIL.Image
-import json
 from IPython.display import clear_output, Image, display
 from google.protobuf import text_format
-
-import datetime
-import json
-import os
-import uuid
-
 import caffe
-
-from app import db, Job, get_or_create_image
 
 
 def showarray(a, fmt='jpeg'):
@@ -103,7 +94,7 @@ def deepdream(net, base_img, iter_n=10, octave_n=4, octave_scale=1.4, end='incep
     return deprocess(net, src.data[0])
 
 
-def process_image(input_path, output_folder, maxwidth=400, **config):
+def process_image(input_path, output_path, maxwidth=400, **config):
     net = init()
     img = PIL.Image.open(input_path)
     width = img.size[0]
@@ -117,34 +108,6 @@ def process_image(input_path, output_folder, maxwidth=400, **config):
 
     frame = img
     frame = deepdream(net, frame, **config)
-    output_filename = str(uuid.uuid4()) + ".jpg"
-    output_path = os.path.join(output_folder, output_filename) 
     PIL.Image.fromarray(np.uint8(frame)).save(output_path)
-    return output_filename
 
-
-def process_job(job_id):
-    job = Job.query.get(job_id)
-    if not job or job.status in ("COMPLETED", "FAILED"):
-        return
-    
-    try:
-        job.status = "PROCESSING"
-        job.stated = datetime.datetime.utcnow()
-        db.session.commit()
-
-        output_folder = "/opt/deepdream/outputs"
-
-        parameters_dict = json.loads(job.parameters)
-        output_filename = process_image(job.source_image.fullpath, output_folder, **parameters_dict)
-        image = get_or_create_image(output_filename, output_folder)
-        job.result_image_id = image.id
-        job.status = "COMPLETED"
-        job.finished = datetime.datetime.utcnow()
-        db.session.commit()
-    except Exception as e:
-        job.status = "FAILED"
-        job.log = str(e)
-        db.session.commit()
-        raise
 

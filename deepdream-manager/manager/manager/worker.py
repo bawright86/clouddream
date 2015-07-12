@@ -17,7 +17,7 @@ def process_job(job_id):
     
     try:
         job.status = "PROCESSING"
-        job.stated = datetime.datetime.utcnow()
+        job.started = datetime.datetime.utcnow()
         db.session.commit()
 
         output_folder = "/opt/deepdream/outputs"

@@ -85,9 +85,8 @@ def new_job(image_id):
     db.session.commit()
 
     compute_queue.enqueue_call(
-        func='deepdream.process_job', timeout=3600, kwargs={"job_id": job.id}
+        func='worker.process_job', timeout=3600, kwargs={"job_id": job.id}
     )
-    print "queued job", job.id
     return redirect(url_for('view', image_id=image.id))
 
 

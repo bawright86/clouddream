@@ -13,15 +13,29 @@ By default nginx is configured with basic auth setup to control access to the se
 
 ## Setup
 
+### With Docker Compose
+
+Make sure Docker compose is installed, see the [official installation instructions](https://docs.docker.com/compose/install/).
+
+Use ```docker compose up``` to start all the containers.
+
+Use ```docker compose scale compute=N``` to have N compute workers working in parallel.
+
+### Without Docker compose
+
+Just use the start.sh script, it will automatically pull the images needed and start the containers. Use stop.sh to stop the containers.
+
 Make sure a docker is installed.
 You need apache2-utils to generate the htpasswd file as well.
+
+If you want to generate the images yourself
 
 ```
 git clone git@github.com:hamstah/clouddream.git
 cd clouddream/deepdream-compute
-docker build -t deepdream-compute .
+docker build -t hamstah/deepdream-compute .
 cd ../deepdream-manager
-docker build -t deepdream-manager .
+docker build -t hamstah/deepdream-manager .
 cd ../deepdream
 htpasswd -c .htpasswd exampleuser
 cd ..
@@ -32,16 +46,16 @@ cd ..
 
 ### Containers
 
-- deepdream-redis has a redis server to manage the queue of processing jobs
-- deepdream-nginx serves the static files for the UI, proxies to gunicorn and serves the images
-- deepdream-compute contains a worker (rq) to process images from the redis queue
-- deepdream-manager is the python/Flask based manager displaying images, dealing with uploads and queuing jobs
+- redis has a redis server to manage the queue of processing jobs
+- nginx serves the static files for the UI, proxies to gunicorn and serves the images
+- compute contains a worker (rq) to process images from the redis queue
+- manager is the python/Flask based manager displaying images, dealing with uploads and queuing jobs
 
 ### Docker images
 
-- deepdream-redis and deepdream-nginx use the official Dockerfile
-- deepdream-compute is based on ubuntu and sets up all the environment needed for deepdream to work in
-- deepdream-manager is based on deepdream-compute with the added dependencies for flask, rq etc. The compute and manager containers are actually based on the manager image to make requirements management easier.
+- redis and nginx use the official Dockerfile
+- compute is based on ubuntu and sets up all the environment needed for deepdream to work in
+- manager is based on deepdream-compute with the added dependencies for flask, rq etc. The compute and manager containers are actually based on the manager image to make requirements management easier.
 
 
 ### Job parameters
@@ -194,6 +208,3 @@ https://github.com/google/deepdream
 ### License
 
 MIT License
-
-
-

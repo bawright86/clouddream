@@ -21,8 +21,8 @@ from models import (
     db,
 )
 
-output_folder = "/opt/deepdream/outputs" 
-input_folder = "/opt/deepdream/inputs" 
+output_folder = "/opt/deepdream/outputs"
+input_folder = "/opt/deepdream/inputs"
 path_prefix = "/outputs"
 
 output_file = "images.json"
@@ -44,8 +44,8 @@ configure_uploads(app, uploaded_photos)
 
 
 redis = Redis(
-    host=os.getenv("DEEPDREAM_REDIS_PORT_6379_TCP_ADDR"),
-    port=os.getenv("DEEPDREAM_REDIS_PORT_6379_TCP_PORT")
+    host=os.getenv("REDIS_PORT_6379_TCP_ADDR"),
+    port=os.getenv("REDIS_PORT_6379_TCP_PORT")
 )
 compute_queue = Queue('compute', connection=redis)
 
@@ -60,7 +60,7 @@ def get_or_create_image(filename, folder):
     ).first()
     if not image:
         image = Image(
-            filename=filename, 
+            filename=filename,
             folder=folder,
         )
         db.session.add(image)
@@ -100,12 +100,12 @@ def scan():
 
     for input_image in Image.query.filter_by(folder=input_folder):
         result_images = Image.query.filter(
-            Image.folder == output_folder, 
+            Image.folder == output_folder,
             Image.filename == input_image.filename
         )
         for output_image in result_images:
             job = Job.query.filter(
-                Job.source_image_id == input_image.id, 
+                Job.source_image_id == input_image.id,
                 Job.result_image_id == output_image.id,
             ).first()
             if not job:
@@ -124,7 +124,7 @@ def download_file(url, local_filename):
     # todo check size
     r = requests.get(url, stream=True)
     with open(local_filename, 'wb') as f:
-        for chunk in r.iter_content(chunk_size=1024): 
+        for chunk in r.iter_content(chunk_size=1024):
             if chunk: # filter out keep-alive new chunks
                 f.write(chunk)
                 f.flush()
@@ -158,7 +158,7 @@ def upload():
 
 def list_images(outoput_folder):
     return sorted([
-        f for f in os.listdir(output_folder) 
+        f for f in os.listdir(output_folder)
         if os.path.splitext(f)[-1].lower() in images_extensions
     ])
 
@@ -168,10 +168,10 @@ def images():
     all_images = Image.query
     result_images = Image.query.join((Job, Job.result_image_id==Image.id))
     return render_template(
-        "images.html", 
+        "images.html",
         source_images=all_images.except_(result_images).order_by(Image.id.desc())
     )
-            
+
 
 @app.route("/api/job")
 def jobs():
@@ -186,7 +186,7 @@ def jobs():
     ).order_by(Job.id.desc()).limit(15)
 
     return render_template(
-        "jobs.html", 
+        "jobs.html",
         pending_jobs=pending_jobs,
         last_completed_jobs=last_completed_jobs,
     )
@@ -208,4 +208,3 @@ def _jinja2_filter_duration(delta):
 @app.template_filter('time')
 def _jinja2_filter_datetime(dt):
     return dt.replace(microsecond=0)
-

@@ -24,6 +24,8 @@ from models import (
 output_folder = "/opt/deepdream/outputs"
 input_folder = "/opt/deepdream/inputs"
 path_prefix = "/outputs"
+caffe_path = "/opt/caffe"
+
 
 output_file = "images.json"
 images_extensions = [
@@ -68,6 +70,30 @@ def get_or_create_image(filename, folder):
     return image
 
 
+def list_models():
+    models_path = os.path.join(caffe_path, "models")
+    model_names = os.listdir(models_path)
+
+    res = {}
+    for model_name in model_names:
+        net_fn = os.path.join(models_path, model_name, 'deploy.prototxt')
+        param_fn = os.path.join(models_path, model_name, model_name + '.caffemodel')
+
+        if os.path.exists(net_fn) and os.path.exists(param_fn):
+            res[model_name] = {
+                "net_fn": net_fn,
+                "param_fn": param_fn,
+            }
+
+    return res
+
+
+@app.route("/api/model")
+def model():
+    models = list_models().keys()
+    return str(models)
+
+
 @app.route("/api/image/<image_id>/job", methods=["POST"])
 def new_job(image_id):
     image = Image.query.get(image_id)
@@ -75,13 +101,23 @@ def new_job(image_id):
         abort(404)
 
     try:
-        parameters = request.form["parameters"]
-        json.loads(parameters)
-    except:
+        parameters = {}
+        for key in ["model_name", "maxwidth", "iter_n", "octave_n", "end"]:
+            parameters[key] = request.form[key]
+
+        for num_key in ["maxwidth", "iter_n", "octave_n"]:
+            parameters[num_key] = int(parameters[num_key])
+
+        parameters["model_name"] = str(parameters["model_name"])
+
+    except (KeyError, ValueError, TypeError):
+        abort(400)
+
+    if parameters["model_name"] not in list_models().keys():
         abort(400)
 
     job = Job(source_image_id=image_id,
-              parameters=parameters)
+              parameters=json.dumps(parameters))
     db.session.add(job)
     db.session.commit()
 
@@ -208,3 +244,9 @@ def _jinja2_filter_duration(delta):
 @app.template_filter('time')
 def _jinja2_filter_datetime(dt):
     return dt.replace(microsecond=0)
+
+@app.context_processor
+def context_processor():
+    return {
+        "list_models": list_models,
+    }

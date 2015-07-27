@@ -6,6 +6,7 @@ import PIL.Image
 from IPython.display import clear_output, Image, display
 from google.protobuf import text_format
 import caffe
+import os
 
 
 def showarray(a, fmt='jpeg'):
@@ -15,10 +16,12 @@ def showarray(a, fmt='jpeg'):
     display(Image(data=f.getvalue()))
 
 
-def init():
-    model_path = '/opt/caffe/models/bvlc_googlenet/' # substitute your path here
-    net_fn   = model_path + 'deploy.prototxt'
-    param_fn = model_path + 'bvlc_googlenet.caffemodel'
+def init(model_name):
+    model_path = os.path.join('/opt/caffe/models', model_name)
+    net_fn   = os.path.join(model_path, 'deploy.prototxt')
+    param_fn = os.path.join(model_path, '%s.caffemodel' % model_name)
+    assert os.path.exists(param_fn)
+    assert os.path.exists(net_fn)
 
     # Patching model to be able to compute gradients.
     # Note that you can also manually add "force_backward: true" line to "deploy.prototxt".
@@ -27,9 +30,11 @@ def init():
     model.force_backward = True
     open('tmp.prototxt', 'w').write(str(model))
 
-    net = caffe.Classifier('tmp.prototxt', param_fn,
-                           mean = np.float32([104.0, 116.0, 122.0]), # ImageNet mean, training set dependent
-                           channel_swap = (2,1,0)) # the reference model has channels in BGR order instead of RGB
+    net = caffe.Classifier(
+        'tmp.prototxt', str(param_fn),
+        mean = np.float32([104.0, 116.0, 122.0]), # ImageNet mean, training set dependent
+        channel_swap = (2,1,0)) # the reference model has channels in BGR order instead of RGB
+
     return net
 
 def preprocess(net, img):
@@ -94,8 +99,8 @@ def deepdream(net, base_img, iter_n=10, octave_n=4, octave_scale=1.4, end='incep
     return deprocess(net, src.data[0])
 
 
-def process_image(input_path, output_path, maxwidth=400, **config):
-    net = init()
+def process_image(input_path, output_path, model_name, maxwidth=400, **config):
+    net = init(model_name)
     img = PIL.Image.open(input_path)
     width = img.size[0]
 

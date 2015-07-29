@@ -1,12 +1,15 @@
 {% extends "base.html" %}
-{% from "macros.html" import show_image_to_compare, show_image, job_image_with_link %}
+{% from "macros.html" import show_image_to_compare, show_image, job_image_with_link, render_pagination %}
 
 <div class="container">
 
 {% block title %}Images{% endblock %}
 
 {% block body %}
-{% for image in source_images %}
+
+{{ render_pagination(source_images, 'images') }}
+
+{% for image in source_images.items %}
   <div>
     {{ show_image_to_compare(image, image) }}
     {% for job in image.jobs %}

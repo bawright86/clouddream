@@ -33,6 +33,7 @@ images_extensions = [
     ".jpeg",
     ".png",
 ]
+images_per_page = 20
 
 
 app = Flask(__name__)
@@ -201,11 +202,18 @@ def list_images(outoput_folder):
 
 @app.route("/api/image")
 def images():
+    try:
+        page = int(request.args.get("page", 1))
+    except:
+        page = 1
+
     all_images = Image.query
     result_images = Image.query.join((Job, Job.result_image_id==Image.id))
     return render_template(
         "images.html",
-        source_images=all_images.except_(result_images).order_by(Image.id.desc())
+        source_images=all_images.except_(result_images).order_by(Image.id.desc()).paginate(
+            page, images_per_page, False
+        )
     )
 
 

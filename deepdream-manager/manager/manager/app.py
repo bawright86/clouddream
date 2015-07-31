@@ -178,6 +178,7 @@ def upload():
         path = os.path.join(input_folder, filename)
         download_file(url, path)
         image = get_or_create_image(filename, input_folder)
+        image.create_thumbnail()
         return redirect(url_for('view', image_id=image.id))
 
 
@@ -188,6 +189,7 @@ def upload():
         except UploadNotAllowed:
             return abort(403)
         image = get_or_create_image(filename, input_folder)
+        image.create_thumbnail()
         return redirect(url_for('view', image_id=image.id))
 
     return abort(400)
@@ -258,3 +260,4 @@ def context_processor():
     return {
         "list_models": list_models,
     }
+

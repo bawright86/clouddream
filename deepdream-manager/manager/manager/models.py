@@ -1,7 +1,10 @@
 import datetime
 import os
 
+from sqlalchemy.orm.session import object_session
+
 from flask.ext.sqlalchemy import SQLAlchemy
+from utils import create_thumbnail
 
 db = SQLAlchemy()
 
@@ -14,12 +17,48 @@ class Image(db.Model):
     source = db.Column(db.String(300), nullable=True)
     added = db.Column(db.DateTime, default=db.func.now())
     
+    def create_thumbnail(self, size=(500, 333)):
+        _, thumbnail_filename = create_thumbnail(self.fullpath, size)
+        folder, filename = os.path.split(thumbnail_filename)
+        thumbnail = Thumbnail(
+            image_id=self.id, 
+            width=size[0], 
+            height=size[1], 
+            folder=folder, 
+            filename=filename
+        )
+        object_session(self).add(thumbnail)
+        object_session(self).commit()
+
     @property
     def fullpath(self):
         return os.path.join(self.folder, self.filename)
 
     def __repr__(self):
         return "<Image id=%s>" % self.id
+
+class Thumbnail(db.Model):
+
+    id = db.Column(db.Integer, primary_key=True)
+    image_id = db.Column(db.Integer, db.ForeignKey(Image.id))
+    width = db.Column(db.Integer)
+    height = db.Column(db.Integer)
+    filename = db.Column(db.String(100), nullable=False)
+    folder = db.Column(db.String(100), nullable=False)
+
+    image = db.relationship(
+        'Image', backref=db.backref('thumbnails', lazy='dynamic'),
+        foreign_keys=[image_id]
+    )
+
+    @property
+    def fullpath(self):
+        return os.path.join(self.folder, self.filename)
+
+    def __repr__(self):
+        return "<Thumbnail id=%s>" % self.id
+    
+
 
 class Job(db.Model):
 

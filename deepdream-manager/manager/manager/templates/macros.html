@@ -2,6 +2,16 @@
 {% if image.folder %}/{{ image.folder.replace("/opt/deepdream/", "") }}{% endif %}/{{ image.filename }}
 {%- endmacro -%}
 
+{%- macro image_thumbnail_url(image) -%}
+{%- set thumbnail = image.thumbnails.first() -%}
+{%- if thumbnail -%}
+{{ image_url(thumbnail) }}
+{%- else -%}
+{{ image_url(image) }}
+{%- endif -%}
+{%- endmacro -%}
+
+
 {% macro image_link(image, content) %}
 <a href="{{ url_for('view', image_id=image.id) }}">{{ content }}</a>
 {% endmacro %}
@@ -12,20 +22,20 @@
 
 {% macro job_image_with_link(job) %}
 <a href="{{ url_for('view', image_id=job.source_image_id) }}#job-{{ job.id }}">
-  <img style="height: 200px" src="{{ image_url(job.result_image) }}" alt="{{ job.result_image.id }}">
+  <img src="{{ image_thumbnail_url(job.result_image) }}" alt="{{ job.result_image.id }}">
 </a>
 {% endmacro %}
 
 
 {% macro show_image_to_compare(image, source_image) %}
    <a href="{{ url_for('view', image_id=source_image.id) }}">
-     <img style="height: 200px" src="{{ image_url(image) }}" alt="{{ image.id }}">
+     <img src="{{ image_thumbnail_url(image) }}" alt="{{ image.id }}">
    </a>
 {% endmacro %}
 
 {% macro show_image(image) %}
    <a href="{{ image_url(image) }}">
-     <img style="height: 600px" src="{{ image_url(image) }}" alt="{{ image.id }}">
+     <img src="{{ image_thumbnail_url(image) }}" alt="{{ image.id }}">
    </a>
 {% endmacro %}
 

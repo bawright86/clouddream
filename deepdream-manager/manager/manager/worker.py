@@ -28,6 +28,7 @@ def process_job(job_id):
         process_image(job.source_image.fullpath, output_path, **parameters_dict)
 
         image = get_or_create_image(output_filename, output_folder)
+        image.create_thumbnail()
         job.result_image_id = image.id
         job.status = "COMPLETED"
         job.finished = datetime.datetime.utcnow()

@@ -112,4 +112,7 @@ RUN cd /opt/caffe && make test && make runtest
 #Download GoogLeNet
 RUN /opt/caffe/scripts/download_model_binary.py /opt/caffe/models/bvlc_googlenet
 RUN /opt/caffe/scripts/download_model_binary.py /opt/caffe/models/bvlc_alexnet
+RUN /opt/caffe/scripts/download_model_binary.py /opt/caffe/models/finetune_flickr_style
+
+
 

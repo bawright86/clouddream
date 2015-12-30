@@ -48,7 +48,6 @@ def make_step(net, step_size=1.5, end='inception_4c/output', jitter=32, clip=Tru
 
     src = net.blobs['data'] # input image is storred in Net's 'data' blob
     dst = net.blobs[end]
-
     ox, oy = np.random.randint(-jitter, jitter+1, 2)
     src.data[0] = np.roll(np.roll(src.data[0], ox, -1), oy, -2) # apply jitter shift
             
@@ -72,6 +71,7 @@ def deepdream(net, base_img, iter_n=10, octave_n=4, octave_scale=1.4, end='incep
         octaves.append(nd.zoom(octaves[-1], (1, 1.0/octave_scale,1.0/octave_scale), order=1))
     
     src = net.blobs['data']
+
     detail = np.zeros_like(octaves[-1]) # allocate image for network-produced details
     for octave, octave_base in enumerate(octaves[::-1]):
         h, w = octave_base.shape[-2:]
@@ -95,6 +95,14 @@ def deepdream(net, base_img, iter_n=10, octave_n=4, octave_scale=1.4, end='incep
             
         # extract details produced on the current octave
         detail = src.data[0]-octave_base
+
+    print "-----------------------------------------------------------"
+    out = net.forward()
+    print net.blobs['prob'].data[0].flatten().argsort()[-1:-6:-1]
+    cls = out['prob'].argmax()
+    print cls
+    print "-----------------------------------------------------------"
+
     # returning the resulting image
     return deprocess(net, src.data[0])
 
